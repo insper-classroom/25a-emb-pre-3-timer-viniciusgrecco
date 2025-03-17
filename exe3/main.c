@@ -5,16 +5,20 @@
 const int BTN_PIN_R = 28;
 const int LED_PIN_R = 4;
 
-volatile int flag_f_r = 0;
+volatile int flag_btn_1 = 0;
+volatile int flag_btn_2 = 0;
+volatile absolute_time_t apertou;
 
 void btn_callback(uint gpio, uint32_t events) {
     if (events == 0x4) { // fall edge
-        if (gpio == BTN_PIN_R)
-            flag_f_r = 1;
-
+        if (gpio == BTN_PIN_R){
+            flag_btn_1 = 1;
+            apertou = get_absolute_time();
+        }
     } else if (events == 0x8) { // rise edge
-        if (gpio == BTN_PIN_R)
-            flag_f_r = 0;
+        if (gpio == BTN_PIN_R){
+            flag_btn_2 = 1;
+        }
     }
 }
 
@@ -33,7 +37,19 @@ int main() {
 
     while (true) {
 
-        if (flag_f_r) {
+        if (flag_btn_2) {
+            flag_btn_2 = 0;
+
+            if (flag_btn_1) {
+                int soltou = get_absolute_time();
+                int diferenca = soltou - apertou;
+                
+                if (diferenca >= 500000) {
+                    gpio_put(LED_PIN_R, !gpio_get(LED_PIN_R));
+                }
+                flag_btn_1 = 0;
+            }
         }
+        sleep_ms(10);
     }
 }
